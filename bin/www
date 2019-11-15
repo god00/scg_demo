@@ -1,0 +1,99 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var serverInit = require('../server');
+var http = require('http');
+var config = require('../config');
+
+
+const cluster = require('cluster');
+const numCPUs = require('os').cpus().length;
+
+var port = process.env.PORT || 65521;
+serverInit.set('port', port);
+/**
+ * Create HTTPs server.
+ */
+
+// Running Cron Job at 17:00 every Mon-Fri
+
+if (cluster.isMaster) {
+  masterProcess();
+} else {
+  childProcess();
+}
+
+async function masterProcess() {
+  /**
+ * Get port from environment and store in Express.
+ */
+  console.log(`Master ${process.pid} is running`);
+
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+}
+
+function childProcess() {
+  console.log(`Worker ${process.pid} started...`);
+
+  var server = http.createServer(serverInit);
+
+  /**
+  * Listen on provided port, on all network interfaces.
+  */
+
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+
+  /**
+  * Event listener for HTTP server "error" event.
+  */
+
+  function onError(error) {
+    if (error.syscall !== 'listen') {
+      throw error;
+    }
+
+    var bind = typeof port === 'string'
+      ? 'Pipe ' + port
+      : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+      case 'EACCES':
+        console.error(bind + ' requires elevated privileges');
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        console.error(bind + ' is already in use');
+        process.exit(1);
+        break;
+      default:
+        throw error;
+    }
+  }
+
+  /**
+  * Event listener for HTTP server "listening" event.
+  */
+
+  function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+      ? 'pipe ' + addr
+      : 'port ' + addr.port;
+    console.log('\x1b[35m%s\x1b[0m', 'Listening on ' + bind);
+  }
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled Rejection at:', reason.stack || reason)
+    // Recommended: send the information to sentry.io
+    // or whatever crash reporting service you use
+  })
+
+}

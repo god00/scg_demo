@@ -1,0 +1,21 @@
+{
+  "name": "SCG_backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon ./bin/www",
+    "start:heroku": "node ./bin/www"
+  },
+  "dependencies": {
+    "body-parser": "latest",
+    "compression": "^1.7.4",
+    "cookie-parser": "~1.4.3",
+    "express": "latest",
+    "express-content-length-validator": "^1.0.0",
+    "helmet": "^3.13.0",
+    "hpp": "^0.2.2",
+    "http-errors": "~1.6.2",
+    "morgan": "~1.9.0",
+    "request": "^2.88.0"
+  }
+}
